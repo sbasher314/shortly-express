@@ -94,17 +94,22 @@ app.post('/login', (req, res, next) => {
       }
       let success = models.Users.compare(password, result.password, result.salt);
       if (success) {
+        req.userId = result.id;
         return result;
       } else {
         return Promise.reject('Username or Password is incorrect');
       }
     })
     .then(success => {
-      Auth.createSession();
+      return Auth.createSession(req, res, next);
+    })
+    .then(() => {
+      res.end();
     })
     .catch(err => {
       res.statusCode = 500;
-      res.end(err);
+      console.log(err);
+      res.end();
     });
 
 });
