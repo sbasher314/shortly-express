@@ -96,6 +96,10 @@ app.post('/links',
 // Write your authentication routes here
 /************************************************************/
 
+let verifyFields = (username, password) => {
+  return (username.length >= 4 && password.length >= 4 && username.length <= 32 && password.length <= 32);
+};
+
 app.get('/login', (req, res, next) => {
   res.render('login');
 });
@@ -103,51 +107,63 @@ app.get('/login', (req, res, next) => {
 app.post('/login', (req, res, next) => {
   let username = req.body.username;
   let password = req.body.password;
-  models.Users.get({ username })
-    .then(result => {
-      if (result === undefined) {
-        return Promise.reject('User not found');
-      }
-      let success = models.Users.compare(password, result.password, result.salt);
-      if (success) {
-        req.userId = result.id;
-        return result;
-      } else {
-        return Promise.reject('Username or Password is incorrect');
-      }
-    })
-    .then(success => {
-      return Auth.assignSession(req, res);
-    })
-    .then(() => {
-      console.log('response?');
-      res.redirect('/');
-    })
-    .catch(err => {
-      res.statusCode = 500;
-      console.log(err);
-      res.redirect('/login');
-    });
+  if (verifyFields(username, password)) {
+    models.Users.get({ username })
+      .then(result => {
+        if (result === undefined) {
+          return Promise.reject('User not found');
+        }
+        let success = models.Users.compare(password, result.password, result.salt);
+        if (success) {
+          req.userId = result.id;
+          return result;
+        } else {
+          return Promise.reject('Username or Password is incorrect');
+        }
+      })
+      .then(success => {
+        return Auth.assignSession(req, res);
+      })
+      .then(() => {
+        console.log('response?');
+        res.redirect('/');
+      })
+      .catch(err => {
+        res.statusCode = 500;
+        console.log(err);
+        res.redirect('/login');
+      });
+  } else {
+    res.statusCode = 500;
+    console.log('username or password entered invalid');
+    res.redirect('/login');
+  }
 
 });
 
 app.post('/signup', (req, res, next) => {
   let username = req.body.username;
   let password = req.body.password;
-  models.Users.create({ username, password })
-    .then(result => {
-      req.userId = result.insertId;
-      console.log('created user: ' + JSON.stringify(result));
-      return Auth.assignSession(req, res);
-    })
-    .then(() => {
-      res.redirect('/');
-    })
-    .catch(err => {
-      console.error(err);
-      res.statusCode = 409;
-      res.redirect('/signup');
-    });
+  if (verifyFields(username, password)) {
+    models.Users.create({ username, password })
+      .then(result => {
+        req.userId = result.insertId;
+        console.log('created user: ' + JSON.stringify(result));
+        return Auth.assignSession(req, res);
+      })
+      .then(() => {
+        res.redirect('/');
+      })
+      .catch(err => {
+        console.error(err);
+        res.statusCode = 409;
+        res.redirect('/signup');
+      });
+  } else {
+    res.statusCode = 409;
+    res.redirect('/signup');
+  }
+
 });
 
 app.get('/signup', (req, res, next) => {
@@ -158,7 +174,6 @@ let logout = (req, res) => {
   Auth.logout(req, res)
     .then(() => {
       res.redirect('/login');
-      //res.end('User is Logged Out');
     });
 };
 

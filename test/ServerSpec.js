@@ -147,6 +147,90 @@ describe('', function() {
       });
     });
 
+    it('password length should not be less than 4 characters', function(done) {
+      var options = {
+        'method': 'POST',
+        'uri': 'http://127.0.0.1:4568/signup',
+        'json': {
+          'username': 'Samantha',
+          'password': 'abc'
+        }
+      };
+
+      request(options, function(error, res, body) {
+        var queryString = 'SELECT * FROM users where username = "Samantha"';
+        db.query(queryString, function(err, rows) {
+          if (err) { done(err); }
+          var user = rows[0];
+          expect(user).to.not.exist;
+          done();
+        });
+      });
+    });
+
+    it('password length should not be more than 32 characters', function(done) {
+      var options = {
+        'method': 'POST',
+        'uri': 'http://127.0.0.1:4568/signup',
+        'json': {
+          'username': 'Samantha',
+          'password': '123456789123456789123456789123456789'
+        }
+      };
+
+      request(options, function(error, res, body) {
+        var queryString = 'SELECT * FROM users where username = "Samantha"';
+        db.query(queryString, function(err, rows) {
+          if (err) { done(err); }
+          var user = rows[0];
+          expect(user).to.not.exist;
+          done();
+        });
+      });
+    });
+
+    it('username length should not be less than 4 characters', function(done) {
+      var options = {
+        'method': 'POST',
+        'uri': 'http://127.0.0.1:4568/signup',
+        'json': {
+          'username': 'Sam',
+          'password': 'password'
+        }
+      };
+
+      request(options, function(error, res, body) {
+        var queryString = 'SELECT * FROM users where username = "Sam"';
+        db.query(queryString, function(err, rows) {
+          if (err) { done(err); }
+          var user = rows[0];
+          expect(user).to.not.exist;
+          done();
+        });
+      });
+    });
+
+    it('username length should not be more than 32 characters', function(done) {
+      var options = {
+        'method': 'POST',
+        'uri': 'http://127.0.0.1:4568/signup',
+        'json': {
+          'username': '123456789123456789123456789123456789',
+          'password': 'password'
+        }
+      };
+
+      request(options, function(error, res, body) {
+        var queryString = 'SELECT * FROM users where username = "123456789123456789123456789123456789"';
+        db.query(queryString, function(err, rows) {
+          if (err) { done(err); }
+          var user = rows[0];
+          expect(user).to.not.exist;
+          done();
+        });
+      });
+    });
+
     it('does not store the user\'s original text password', function(done) {
       var options = {
         'method': 'POST',
@@ -599,6 +683,14 @@ describe('', function() {
 
     it('Redirects to login page if a user tries to see all of the links and is not signed in', function(done) {
       request('http://127.0.0.1:4568/links', function(error, res, body) {
+        if (error) { return done(error); }
+        expect(res.req.path).to.equal('/login');
+        done();
+      });
+    });
+
+    it('Redirects to login page if a user logs out', function(done) {
+      request('http://127.0.0.1:4568/logout', function(error, res, body) {
         if (error) { return done(error); }
         expect(res.req.path).to.equal('/login');
         done();
