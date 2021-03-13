@@ -123,7 +123,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Account Creation:', function() {
+  describe('Account Creation:', function() {
 
     it('signup creates a new user record', function(done) {
       var options = {
@@ -208,7 +208,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Account Login:', function() {
+  describe('Account Login:', function() {
 
     beforeEach(function(done) {
       var options = {
@@ -277,7 +277,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Sessions Schema:', function() {
+  describe('Sessions Schema:', function() {
     it('contains a sessions table', function(done) {
       var queryString = 'SELECT * FROM sessions';
       db.query(queryString, function(err, results) {
@@ -325,7 +325,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Express Middleware', function() {
+  describe('Express Middleware', function() {
     var cookieParser = require('../server/middleware/cookieParser.js');
     var createSession = require('../server/middleware/auth.js').createSession;
 
@@ -375,21 +375,30 @@ describe('', function() {
       it('initializes a new session when there are no cookies on the request', function(done) {
         var requestWithoutCookies = httpMocks.createRequest();
         var response = httpMocks.createResponse();
-
-        createSession(requestWithoutCookies, response, function() {
+        createSession(requestWithoutCookies, response).then(function() {
           var session = requestWithoutCookies.session;
           expect(session).to.exist;
           expect(session).to.be.an('object');
           expect(session.hash).to.exist;
           done();
         });
+
+        //});
+        // createSession(requestWithoutCookies, response, function() {
+        //   var session = requestWithoutCookies.session;
+        //   console.log('in here', session)
+        //   expect(session).to.exist;
+        //   expect(session).to.be.an('object');
+        //   expect(session.hash).to.exist;
+        //   done();
+        // });
       });
 
       it('sets a new cookie on the response when a session is initialized', function(done) {
         var requestWithoutCookie = httpMocks.createRequest();
         var response = httpMocks.createResponse();
-
-        createSession(requestWithoutCookie, response, function() {
+        ///////// Maybe change back to shortlyid
+        createSession(requestWithoutCookie, response).then(function() {
           var cookies = response.cookies;
           expect(cookies['shortlyid']).to.exist;
           expect(cookies['shortlyid'].value).to.exist;
@@ -402,13 +411,13 @@ describe('', function() {
         var requestWithoutCookie = httpMocks.createRequest();
         var response = httpMocks.createResponse();
 
-        createSession(requestWithoutCookie, response, function() {
+        createSession(requestWithoutCookie, response).then( function() {
           var cookie = response.cookies.shortlyid.value;
           var secondResponse = httpMocks.createResponse();
           var requestWithCookies = httpMocks.createRequest();
           requestWithCookies.cookies.shortlyid = cookie;
 
-          createSession(requestWithCookies, secondResponse, function() {
+          createSession(requestWithCookies, secondResponse).then( function() {
             var session = requestWithCookies.session;
             expect(session).to.be.an('object');
             expect(session.hash).to.exist;
@@ -422,12 +431,12 @@ describe('', function() {
         var requestWithoutCookies = httpMocks.createRequest();
         var response = httpMocks.createResponse();
 
-        createSession(requestWithoutCookies, response, function() {
+        createSession(requestWithoutCookies, response).then( function() {
           var sessionHashOne = requestWithoutCookies.session.hash;
           var secondRequestWithoutCookies = httpMocks.createRequest();
           var responseTwo = httpMocks.createResponse();
 
-          createSession(secondRequestWithoutCookies, responseTwo, function() {
+          createSession(secondRequestWithoutCookies, responseTwo).then( function() {
             var sessionHashTwo = secondRequestWithoutCookies.session.hash;
             expect(sessionHashOne).to.not.equal(sessionHashTwo);
             done();
@@ -444,7 +453,7 @@ describe('', function() {
           if (error) { return done(error); }
           var userId = results.insertId;
 
-          createSession(requestWithoutCookie, response, function() {
+          createSession(requestWithoutCookie, response).then( function() {
             var hash = requestWithoutCookie.session.hash;
             db.query('UPDATE sessions SET userId = ? WHERE hash = ?', [userId, hash], function(error, result) {
 
@@ -452,7 +461,7 @@ describe('', function() {
               var requestWithCookies = httpMocks.createRequest();
               requestWithCookies.cookies.shortlyid = hash;
 
-              createSession(requestWithCookies, secondResponse, function() {
+              createSession(requestWithCookies, secondResponse).then( function() {
                 var session = requestWithCookies.session;
                 expect(session).to.be.an('object');
                 expect(session.user.username).to.eq(username);
@@ -470,7 +479,7 @@ describe('', function() {
         var requestWithMaliciousCookie = httpMocks.createRequest();
         requestWithMaliciousCookie.cookies.shortlyid = maliciousCookieHash;
 
-        createSession(requestWithMaliciousCookie, response, function() {
+        createSession(requestWithMaliciousCookie, response).then( function() {
           var cookie = response.cookies.shortlyid;
           expect(cookie).to.exist;
           expect(cookie).to.not.equal(maliciousCookieHash);
@@ -480,7 +489,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Sessions and cookies', function() {
+  describe('Sessions and cookies', function() {
     var requestWithSession;
     var cookieJar;
 
@@ -570,7 +579,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Privileged Access:', function() {
+  describe('Privileged Access:', function() {
 
     it('Redirects to login page if a user tries to access the main page and is not signed in', function(done) {
       request('http://127.0.0.1:4568/', function(error, res, body) {
@@ -597,7 +606,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Link creation:', function() {
+  describe('Link creation:', function() {
 
     var cookies = request.jar();
     var requestWithSession = request.defaults({ jar: cookies });
@@ -610,7 +619,7 @@ describe('', function() {
       }
     };
 
-    xbeforeEach(function(done) {
+    beforeEach(function(done) {
       var options = {
         'method': 'POST',
         'followAllRedirects': true,
